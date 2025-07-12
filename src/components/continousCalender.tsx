@@ -1,3 +1,4 @@
+import { appointments } from "../assets/data/data";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -51,8 +52,10 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
       if (container) {
         const containerRect = container.getBoundingClientRect();
         const offset =
-          elementRect.top - containerRect.top -
-          containerRect.height / offsetFactor + elementRect.height ;
+          elementRect.top -
+          containerRect.top -
+          containerRect.height / offsetFactor +
+          elementRect.height;
 
         container.scrollTo({
           top: container.scrollTop + offset,
@@ -97,6 +100,20 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
       onClick(day, month, year);
     }
   };
+  const appointmentMap = useMemo(() => {
+    const map = new Map<string, number>();
+    const now = new Date();
+
+    for (const appt of appointments) {
+      const apptDate = new Date(appt.date);
+      if (apptDate >= now) {
+        const key = appt.date;
+        map.set(key, (map.get(key) || 0) + 1);
+      }
+    }
+
+    return map;
+  }, []);
 
   const generateCalendar = useMemo(() => {
     const today = new Date();
@@ -156,7 +173,10 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
     }
 
     const calendar = calendarWeeks.map((week, weekIndex) => (
-      <div className="flex w-full" key={`week-${weekIndex}`}>
+      <div
+        className="grid w-full grid-cols-1 gap-2 sm:gap-0 sm:flex sm:flex-row"
+        key={`week-${weekIndex}`}
+      >
         {week.map(({ month, day }, dayIndex) => {
           const index = weekIndex * 7 + dayIndex;
           const isNewMonth =
@@ -166,6 +186,11 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
             today.getDate() === day &&
             today.getFullYear() === year;
           const isPast = beforeToday(day, month, year);
+          const dateKey = `${year}-${String(month + 1).padStart(
+            2,
+            "0"
+          )}-${String(day).padStart(2, "0")}`;
+          const appointmentCount = appointmentMap.get(dateKey) || 0;
 
           return (
             <div
@@ -175,20 +200,43 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
               }}
               data-month={month}
               data-day={day}
-              onClick={() => handleDayClick(day, month, year)}
-              className={`relative z-10 m-[-0.5px] group aspect-square w-full grow cursor-pointer rounded-xl border font-medium transition-all hover:z-20 hover:border-red-400 sm:-m-px sm:size-20 sm:rounded-xl sm:border-2 lg:size-36 lg:rounded-xl 2xl:size-40 ${
-                isPast ? "bg-neutral-100" : ""
-              } ${isToday ? "border-red-500" : ""}`}
+              onClick={() => !isPast && handleDayClick(day, month, year)}
+              className={`relative z-10 m-[-0.5px] group aspect-square w-full grow cursor-pointer rounded-xl border font-medium transition-all hover:z-20 hover:border-red-400 hover:scale-105  sm:-m-px sm:size-20 sm:rounded-xl sm:border-2  lg:size-36 lg:rounded-xl 2xl:size-40 ${
+                isPast
+                  ? "bg-neutral-100 dark:bg-zinc-700"
+                  : "bg-white dark:bg-zinc-900"
+              } ${isToday ? " sm:z-11 sm:-mt-1 border-red-500" : ""}`}
             >
+              <span className="absolute sm:hidden  dark:text-white text-black top-7 space-x-3 right-3 flex items-baseline">
+                <p className="text-xl font-bold">
+                  {daysOfWeek[new Date(year, month, day).getDay()]}
+                </p>
+                <p>{month >= 0 ? monthNames[month] : ""}</p>
+              </span>
               <span
-                className={`absolute left-1 top-1 flex size-5 items-center justify-center rounded-full text-xs sm:size-6 sm:text-sm lg:left-2 lg:top-2 lg:size-8 lg:text-base ${
+                className={`absolute left-4 top-4 flex size-5 text-xl items-center justify-center p-6 sm:p-0 rounded-full  sm:size-6 sm:text-sm lg:left-2 lg:top-2 lg:size-8 lg:text-base dark:text-white ${
                   isToday ? "bg-red-500 font-semibold text-white" : ""
-                } ${month < 0 ? "text-slate-400" : "text-slate-800"}`}
+                } ${
+                  month < 0
+                    ? "text-slate-400 dark:text-white"
+                    : "text-slate-800"
+                }`}
               >
                 {day}
               </span>
+
+              {!isPast && appointmentCount > 0 && (
+                <div className="absolute bottom-3 right-3 rounded-full bg-red-500 px-2  py-0.5 text-xs text-white sm:text-sm lg:text-base">
+                  <p>
+                    {appointmentCount === 1
+                      ? "There is 1 appointment."
+                      : `There are ${appointmentCount} appointments. `}
+                  </p>
+                </div>
+              )}
+
               {isNewMonth && (
-                <span className="absolute bottom-0.5 left-0 w-full truncate px-1.5 text-sm font-semibold text-slate-300 sm:bottom-0 sm:text-lg lg:bottom-2.5 lg:left-3.5 lg:-mb-1 lg:w-fit lg:px-0 lg:text-xl 2xl:mb-[-4px] 2xl:text-2xl">
+                <span className="absolute bottom-0.5 left-0 w-full truncate px-1.5 text-sm font-semibold text-slate-400 sm:bottom-0 sm:text-lg lg:bottom-2.5 lg:left-3.5 lg:-mb-1 lg:w-fit lg:px-0 lg:text-xl 2xl:mb-[-4px] 2xl:text-2xl sm:block hidden">
                   {monthNames[month]}
                 </span>
               )}
@@ -256,9 +304,9 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
   }, []);
 
   return (
-    <div className="no-scrollbar calendar-container max-h-full overflow-y-scroll rounded-t-2xl bg-white pb-10 text-slate-800 shadow-xl">
-      <div className="sticky -top-px z-50 w-full rounded-t-2xl bg-white px-5 pt-7 sm:px-8 sm:pt-8">
-        <div className="mb-4 flex w-full flex-wrap items-center justify-between gap-6">
+    <div className="no-scrollbar calendar-container max-h-full overflow-y-scroll rounded-t-2xl bg-white pb-10 text-slate-800 shadow-xl dark:bg-black">
+      <div className="sticky -top-px z-50 w-full rounded-t-2xl bg-white dark:bg-black px-5 md:pt-7 pt-4 md:pb-0 pb-1 sm:px-8 sm:pt-8 ">
+        <div className="mb-4 flex w-full flex-wrap items-center justify-between md:gap-6">
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <Select
               name="month"
@@ -269,24 +317,18 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
             <button
               onClick={handleTodayClick}
               type="button"
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 lg:px-5 lg:py-2.5"
+              className="rounded-lg border border-gray-300 bg-white dark:bg-black dark:hover:bg-accent dark:text-white px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 lg:px-5 lg:py-2.5"
             >
               Today
-            </button>
-            <button
-              type="button"
-              className="whitespace-nowrap rounded-lg bg-red-500 px-3 py-1.5 text-center text-sm font-medium text-white hover:bg-red-600 transition-colors focus:outline-none focus:ring-4 focus:ring-cyan-300 sm:rounded-xl lg:px-5 lg:py-2.5"
-            >
-              + Add Event
             </button>
           </div>
           <div className="flex w-fit items-center justify-between">
             <button
               onClick={handlePrevYear}
-              className="rounded-full border border-slate-300 p-1 transition-colors hover:bg-slate-100 sm:p-2"
+              className="rounded-full border border-slate-300 p-1 transition-colors hover:bg-slate-100 sm:p-2 dark:hover:bg-accent"
             >
               <svg
-                className="size-5 text-slate-800"
+                className="size-5 text-slate-800 dark:text-white "
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -303,15 +345,15 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
                 />
               </svg>
             </button>
-            <h1 className="min-w-16 text-center text-lg font-semibold sm:min-w-20 sm:text-xl">
+            <h1 className="min-w-16 text-center text-lg font-semibold sm:min-w-20 sm:text-xl dark:text-white">
               {year}
             </h1>
             <button
               onClick={handleNextYear}
-              className="rounded-full border border-slate-300 p-1 transition-colors hover:bg-slate-100 sm:p-2"
+              className="rounded-full border border-slate-300 p-1 transition-colors hover:bg-slate-100 sm:p-2 dark:hover:bg-accent"
             >
               <svg
-                className="size-5 text-slate-800"
+                className="size-5 text-slate-800 dark:text-white "
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -330,7 +372,7 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
             </button>
           </div>
         </div>
-        <div className="grid w-full grid-cols-7 justify-between text-slate-500">
+        <div className="md:grid w-full grid-cols-7 justify-between text-slate-500  hidden">
           {daysOfWeek.map((day, index) => (
             <div
               key={index}
@@ -374,7 +416,7 @@ export const Select = ({
       name={name}
       value={value}
       onChange={onChange}
-      className="cursor-pointer rounded border border-gray-300 bg-white py-1.5 pl-2 text-sm font-medium text-gray-900 hover:bg-gray-100 sm:rounded-xl sm:py-2.5 sm:pl-3 sm:pr-8 "
+      className="cursor-pointer dark:bg-black dark:text-white  border border-gray-300 bg-white p-2.5 pr-3 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-md dark:hover:bg-accent"
       required
     >
       {options.map((option) => (

@@ -1,3 +1,4 @@
+import { Moon, Sun } from "lucide-react";
 
 export default function ThemeToggle() {
 
@@ -15,18 +16,18 @@ export default function ThemeToggle() {
   };
 
   return (
-    <div className="p-2 rounded-2xl space-x-2 bg-neutral-200">
+    <div className="p-2 rounded-2xl space-x-2 bg-neutral-200 dark:bg-black">
       <button
         onClick={() => toggleTheme("light")}
-        className="p-2 border rounded-lg cursor-pointer border-neutral-300 shodow hover:bg-white"
+        className="p-2 border rounded-lg cursor-pointer border-neutral-300 shodow hover:bg-accent dark:text-white"
       >
-        Light
+        <Sun/>
       </button>
       <button
         onClick={() => toggleTheme("dark")}
-        className="p-2 border rounded-lg cursor-pointer border-neutral-500"
+        className="p-2 border rounded-lg cursor-pointer border-neutral-300 shodow hover:bg-accent dark:text-white"
       >
-        Dark
+        <Moon/>
       </button>
     </div>
   );
