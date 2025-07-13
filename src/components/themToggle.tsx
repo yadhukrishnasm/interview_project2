@@ -1,16 +1,18 @@
-import { Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ThemeToggle() {
+  const navigate = useNavigate();
 
   const toggleTheme = (theme: string) => {
     switch (theme) {
       case "light":
         document.documentElement.classList.remove("dark");
-        document.documentElement.classList.add("light");
+        localStorage.setItem("theme", "light");
         break;
       case "dark":
-        document.documentElement.classList.remove("light");
         document.documentElement.classList.add("dark");
+        localStorage.setItem("theme", "dark");
         break;
     }
   };
@@ -21,13 +23,19 @@ export default function ThemeToggle() {
         onClick={() => toggleTheme("light")}
         className="p-2 border rounded-lg cursor-pointer border-neutral-300 shodow hover:bg-accent dark:text-white"
       >
-        <Sun/>
+        <Sun />
       </button>
       <button
         onClick={() => toggleTheme("dark")}
         className="p-2 border rounded-lg cursor-pointer border-neutral-300 shodow hover:bg-accent dark:text-white"
       >
-        <Moon/>
+        <Moon />
+      </button>
+      <button
+        onClick={() => navigate("/")}
+        className="p-2 border rounded-lg cursor-pointer border-neutral-300 shodow hover:bg-accent dark:text-white text-red-500"
+      >
+        <LogOut />
       </button>
     </div>
   );

@@ -226,11 +226,11 @@ export const ContinuousCalendar: React.FC<ContinuousCalendarProps> = ({
               </span>
 
               {!isPast && appointmentCount > 0 && (
-                <div className="absolute bottom-3 right-3 rounded-full bg-red-500 px-2  py-0.5 text-xs text-white sm:text-sm lg:text-base">
+                <div className="absolute bottom-3 right-3 rounded-md  bg-red-500 px-2  py-0.5 text-xs text-white sm:text-sm lg:text-base">
                   <p>
                     {appointmentCount === 1
                       ? "There is 1 appointment."
-                      : `There are ${appointmentCount} appointments. `}
+                      : ` ${appointmentCount} appointments. `}
                   </p>
                 </div>
               )}
